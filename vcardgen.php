@@ -1,13 +1,13 @@
 <?
-function addimage ($photo, $h) {
-    list ($h0, $l0, $type) = getimagesize($photo);
+function addimage ($photo, $h) { // ajoute une image redimentionnée à $h pixels (la dimension la plus grande)
+    list ($h0, $l0, $type) = getimagesize($photo); // hauteur, largeur, type
     switch($type) {
-        case 1: $im0 = ImageCreateFromgif($photo); break;
-        case 2: $im0 = ImageCreateFromjpeg($photo); break;
-        case 3: $im0 = ImageCreateFrompng($photo); break;
-        default: return; break;
+        case 1: $im0 = ImageCreateFromgif($photo); break; // GIF
+        case 2: $im0 = ImageCreateFromjpeg($photo); break; // JPEG
+        case 3: $im0 = ImageCreateFrompng($photo); break; // PNG
+        default: return; break; // autre, pas géré
     }
-    if ($h0 > $l0) {
+    if ($h0 > $l0) { // redimensionnement
         $h1 = $h;
         $l1 = floor($l0/$h0*$h1);
     } else {
@@ -15,27 +15,27 @@ function addimage ($photo, $h) {
         $h1 = floor($h0/$l0*$l1);
     }
     $im1 = ImageCreateTrueColor($l1, $h1);
-    imagecopyresampled ($im1, $im0, 0, 0, 0, 0, $l1, $h1, $l0, $h0);
+    imagecopyresampled ($im1, $im0, 0, 0, 0, 0, $l1, $h1, $l0, $h0); // redimentionne l'image
     imagedestroy ($im0);
-    ob_start();
-    switch($type) {
-        case 1: imagegif($im1, null, 75); break;
+    ob_start(); //  détourne le flux
+    switch($type) { // affiche l'image dans le flux
+        case 1: imagegif($im1, null); break;
         case 2: imagejpeg($im1, null, 75); break;
-        case 3: imagepng($im1, null, 75); break;
-        default: echo ''; break;
+        case 3: imagepng($im1, null); break;
+        default: echo ''; break; // type inconnu, n'est pas sensé se produire ici car on a quitté plus haut
     }
-    $data = ob_get_contents();
-    ob_end_clean();
+    $data = ob_get_contents(); // récupère le flux dans une variable
+    ob_end_clean(); // fin du detournement de flux
     imagedestroy ($im1);
-    switch($type) {
+    switch($type) { // entête de l'image
         case 1: $p .= "PHOTO;ENCODING=BASE64;TYPE=GIF:"; break;
         case 2: $p .= "PHOTO;ENCODING=BASE64;TYPE=JPEG:"; break;
         case 3: $p .= "PHOTO;ENCODING=BASE64;TYPE=PNG:"; break;
     }
     $j = strlen($p);
     $vcard = $p;
-    $image = base64_encode($data)."\n";
-    for ($i=0; $i<strlen($image); $i++) {
+    $image = base64_encode($data)."\n"; // encode l'image en base 64
+    for ($i=0; $i<strlen($image); $i++) { // retourne à la ligne tous les 75 carractères
         if(($i+$j-1)%75==0) 
             $vcard.="\r\n ".$image[$i];
         else  
@@ -69,8 +69,8 @@ if ($nom != "")
     $photo = $_FILES['photo']['tmp_name'];
     //$ = $_POST[''];
 
-    $nom = strtoupper($nom[0]).strtolower(substr($nom, 1, strlen($nom)-1));
-    $prenom = strtoupper($prenom[0]).strtolower(substr($prenom, 1, strlen($prenom)-1));
+    $nom = strtoupper($nom[0]).strtolower(substr($nom, 1, strlen($nom)-1)); // première lettre en majuscule, le reste en minuscules
+    $prenom = strtoupper($prenom[0]).strtolower(substr($prenom, 1, strlen($prenom)-1)); // première lettre en majuscule, le reste en minuscules
     
     $vcard = "BEGIN:VCARD\n"; 
     $vcard .= "VERSION:3.0\n"; 
@@ -89,11 +89,11 @@ if ($nom != "")
     $vcard .= "NOTE:Generated with vCard online generator by Daniel Mihalcea.\n";
     $vcard .= "END:VCARD\n";
 
+    // entête pour définir le type MIME au format vCard et forcer le téléchargement au nom défini
     Header("Content-Disposition: attachment; filename=$filename");
     Header("Content-Length: ".strlen($vcard));
     Header("Connection: close");
     Header("Content-Type: text/x-vCard; charset=utf-8; name=$filename");
-    //echo "<pre>";
     echo $vcard;
 
 } else {
